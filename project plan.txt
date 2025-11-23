@@ -1,6 +1,24 @@
 План проекта:
 1. Создать план
 2. Разобраться с методикой создания копий виртуалок. Записать тут пошаговые действия.
+    
+    Создаём клон виртуалки
+    sudo virt-clone --original ubuntu24.04 --name source_test --auto-clone
+
+    Делаем очистку виртуалки
+    sudo virt-sysprep -d source_test --hostname uu3 --operations defaults,-ssh-userdir
+
+    после чего не получается подключиться, т.к. ssh на виртуалке не запущен из-за ошибки отсутсвия ssh-socket
+    надо поэкспериментировать с исключением параметров кроме ssh-userdir
+    Полный список параметров входящих в defaults (согласно версии deepseek):
+        abrt-data, bash-history, blkid-tab, crash-data, cron-spool, 
+        dhcp-client-state, dhcp-server-state, dovecot-data, logfiles, 
+        machine-id, mail-spool, net-hostname, net-hwaddr, pam-data, 
+        package-manager-cache, rpm-db, samba-db-log, script, smolt-uuid, 
+        ssh-hostkeys, ssh-userdir, sssd-db-log, tmp-files, udev-persistent-net, 
+        user-account, utmp, yum-uuid
+
+
 2.1 Создать виртуалку иходник, из которой создать виртуалку source, которая будет использоваться для создания 5 виртуальных машин.
     Характеристики source:  статически ip 192.168.122.10
                             ключ для входа по ssh

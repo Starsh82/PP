@@ -1,6 +1,6 @@
 ---
 - name: Создание статической конфигурации pp-front в KVM VM
-  hosts: pp-front
+  hosts: source
   become: yes
   vars:
     static_ip: "192.168.122.20"

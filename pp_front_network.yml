@@ -1,12 +1,12 @@
 ---
-- name: Создание статической конфигурации pp_front в KVM VM
-  hosts: pp_front
+- name: Создание статической конфигурации pp-front в KVM VM
+  hosts: pp-front
   become: yes
   vars:
     static_ip: "192.168.122.20"
     gateway: "192.168.122.1"
     interface: "enp1s0"
-    new_hostname: "pp_front"
+    new_hostname: "pp-front"
 
   tasks:
     - name: Установка network tools
@@ -40,7 +40,7 @@
         name: systemd-networkd
         state: restarted
 
-    - name: Изменение hostname для pp_front
+    - name: Изменение hostname для pp-front
       hostname:
         name: "{{ new_hostname }}"
 

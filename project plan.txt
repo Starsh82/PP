@@ -59,9 +59,9 @@
                             имя хоста source
 
 3. Сделать 5 плейбуков создающих виртуалки со следующими характеристиками:
-    - 192.168.122.20 pp_front CPU 1 mem 1024 disk 25Gb (nginx)
-    - 192.168.122.21 pp_back1 CPU 1 mem 1024 disk 25Gb (wordpress)
-    - 192.168.122.22 pp_back2 CPU 1 mem 1024 disk 25Gb (wordpress)
-    - 192.168.122.23 pp_BDmaster CPU 1 mem 1024 disk 25Gb (MySQL source)
-    - 192.168.122.24 pp_BDslave CPU 1 mem 1024 disk 25Gb (MySQL replica)
-    - 192.168.122.25 pp_MLA CPU 2 mem 6144 disk 25Gb (grafana, ELK, prometheus)
+    - 192.168.122.20 pp-front CPU 1 mem 1024 disk 25Gb (nginx)
+    - 192.168.122.21 pp-back1 CPU 1 mem 1024 disk 25Gb (wordpress)
+    - 192.168.122.22 pp-back2 CPU 1 mem 1024 disk 25Gb (wordpress)
+    - 192.168.122.23 pp-BDmaster CPU 1 mem 1024 disk 25Gb (MySQL source)
+    - 192.168.122.24 pp-BDslave CPU 1 mem 1024 disk 25Gb (MySQL replica)
+    - 192.168.122.25 pp-MLA CPU 2 mem 6144 disk 25Gb (grafana, ELK, prometheus)

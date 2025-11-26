@@ -64,4 +64,4 @@
     - 192.168.122.22 pp_back2 CPU 1 mem 1024 disk 25Gb (wordpress)
     - 192.168.122.23 pp_BDmaster CPU 1 mem 1024 disk 25Gb (MySQL source)
     - 192.168.122.24 pp_BDslave CPU 1 mem 1024 disk 25Gb (MySQL replica)
-    - 192.168.122.24 pp_MLA CPU 2 mem 6144 disk 25Gb (grafana, ELK, prometheus)
+    - 192.168.122.25 pp_MLA CPU 2 mem 6144 disk 25Gb (grafana, ELK, prometheus)

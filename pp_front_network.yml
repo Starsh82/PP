@@ -1,5 +1,5 @@
 ---
-- name: Создание статической конфигурации pp-front в KVM VM
+- name: Создание статической конфигурации pp-front в KVM VM из source
   hosts: source
   become: yes
   vars:
@@ -32,13 +32,10 @@
         group: root
         mode: 0644
 
-    - name: Apply netplan configuration
-      command: netplan apply
-
-    - name: Restart systemd-networkd
-      systemd:
-        name: systemd-networkd
-        state: restarted
+    # - name: Restart systemd-networkd
+    #   systemd:
+    #     name: systemd-networkd
+    #     state: restarted
 
     - name: Изменение hostname для pp-front
       hostname:
@@ -59,10 +56,32 @@
         group: root
         mode: 0644
 
+    - name: Apply netplan configuration
+      command: netplan apply
+    
+    - name: Ждать восстановления сети
+      wait_for_connection:
+        timeout: 60
+        connect_timeout: 30
+
+- name: Создание статической конфигурации pp-front в KVM VM из source
+  hosts: pp-front
+  become: yes
+  # vars:
+  #   static_ip: "192.168.122.20"
+  #   gateway: "192.168.122.1"
+  #   interface: "enp1s0"
+  #   new_hostname: "pp-front"
+
+  tasks:
+
     - name: Restart systemd-networkd
       systemd:
         name: systemd-networkd
         state: restarted
+
+    - name: Удаление старого ключа
+      command: ssh-keygen -R 192.168.122.20
 
     - name: Display completion message
       debug:

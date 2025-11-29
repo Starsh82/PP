@@ -49,6 +49,11 @@
     Копировние ключа на виртуалку: ssh-copy-id -i ~/.ssh/id_ed25519.pub starsh@192.168.122.121
     Удаление строки из файла ~/.ssh/known_hosts: ssh-keygen -R 192.168.122.22
 
+    virsh setmem source --size 1G --config
+    virsh setmaxmem source --size 2G --config
+    virsh setvcpus pp-front 1 --config
+    virsh setvcpus pp-front 2 --maximum --config
+
 2.3. Адреса "родительских" виртуалок
     192.168.122.10 - Ubuntu 24.04.3 CPU 2 mem 2048 disk 25Gb
     192.168.122.11 - Ubuntu 22.04.5 CPU 2 mem 2048 disk 25Gb

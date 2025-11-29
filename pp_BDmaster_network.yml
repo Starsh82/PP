@@ -9,7 +9,7 @@
     new_hostname: "pp-BDmaster"
 
   tasks:
-  
+
     - name: Установка network tools
       apt:
         name: net-tools
@@ -56,3 +56,4 @@
       ansible.builtin.fail:
         msg: "Соединение не восстановилось после netplan apply. Проверьте: 1) Новый IP адрес 2) Сетевой интерфейс 3) SSH демон"
       when: ansible_connection is failed  # Условие срабатывает только если предыдущая задача wait_for_connection завершилась ошибкой
+...

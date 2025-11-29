@@ -3,13 +3,13 @@
   hosts: source
   become: yes
   vars:
-    static_ip: "192.168.122.21"
+    static_ip: "192.168.122.25"
     gateway: "192.168.122.1"
     interface: "enp1s0"
-    new_hostname: "pp-back1"
+    new_hostname: "pp-MLA"
 
   tasks:
-
+    
     - name: Установка network tools
       apt:
         name: net-tools

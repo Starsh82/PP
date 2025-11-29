@@ -1,0 +1,50 @@
+#!/bin/bash
+
+VMname=$1
+
+function cloneVM() {
+    virt-clone --original source --name $VMname --auto-clone
+    sudo virt-sysprep -d $VMname --hostname $VMname --operations defaults,-ssh-hostkeys,-ssh-userdir --run-command "systemctl enable ssh"
+    virsh start $VMname
+    for i in {1..12}; do
+        echo "Проверка доступности 22 порта на виртуалке $i/12:"
+        nc -zv 192.168.122.11 22
+        if [ $? -eq 0 ]; then
+            echo "Порт 22 доступен"
+            break
+        fi
+        echo "Ждём 5 секунд"
+        sleep 5
+    done
+}
+
+case $VMname in
+    pp-front)
+        cloneVM
+        ansible-playbook pp_front_network.yml
+        ;;
+    pp-back1)
+        cloneVM
+        ansible-playbook pp_back1_network.yml
+        ;;
+    pp-back2)
+        cloneVM
+        ansible-playbook pp_back2_network.yml
+        ;;
+    pp-BDmaster)
+        cloneVM
+        ansible-playbook pp_BDmaster_network.yml
+        ;;
+    pp-BDslave)
+        cloneVM
+        ansible-playbook pp_BDslave_network.yml
+        ;;
+    pp-MLA)
+        cloneVM
+        ansible-playbook pp_MLA_network.yml
+        ;;
+    *)
+        echo "Неизвестное название VM"
+        ;;
+esac
+#ansible-playbook pp_BDslave_network.yml

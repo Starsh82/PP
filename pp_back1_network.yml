@@ -9,6 +9,7 @@
     new_hostname: "pp-back1"
 
   tasks:
+
     - name: Установка network tools
       apt:
         name: net-tools
@@ -32,22 +33,6 @@
         group: root
         mode: 0644
 
-    # - name: Restart systemd-networkd
-    #   systemd:
-    #     name: systemd-networkd
-    #     state: restarted
-
-    # - name: Изменение hostname для pp-front
-    #   hostname:
-    #     name: "{{ new_hostname }}"
-
-    # - name: Update /etc/hosts file
-    #   lineinfile:
-    #     path: /etc/hosts
-    #     regex: '^127\.0\.1\.1'
-    #     line: '127.0.1.1 {{ new_hostname }}'
-    #     state: present
-
     - name: Проверка имени хоста после перезагрузки
       copy:
         content: "{{ new_hostname }}"
@@ -56,53 +41,19 @@
         group: root
         mode: 0644
 
-    # - name: Удаление старого ключа
-    #   command: ssh-keygen -R 192.168.122.20
+    - name: Apply network configuration
+      ansible.builtin.command: netplan apply  # Применяем новые сетевые настройки через netplan
+      async: 10  # Запускаем команду асинхронно с максимальным временем выполнения 45 секунд
+      poll: 0    # Не ждем завершения команды, сразу переходим к следующей задаче (ожидаем разрыв соединения)
 
-    - name: Apply netplan configuration
-      command: netplan apply
+    - name: Wait for reconnection with reasonable timeout
+      ansible.builtin.wait_for_connection:
+        connect_timeout: 5  # Таймаут отдельной попытки подключения - 15 секунд
+        delay: 5            # Ждем 10 секунд перед первой попыткой переподключения
+        timeout: 10          # Общий максимальный таймаут ожидания восстановления соединения - 90 секунд
 
-    - name: Display completion message
-      debug:
-        msg: |
-          ✅ Настройка завершена!
-          Новое имя сервера: {{ new_hostname }}
-          Статический IP: {{ static_ip }}
-          Для применения изменений может потребоваться перезагрузка
-    
-    # - name: Restart systemd-networkd
-    #   systemd:
-    #     name: systemd-networkd
-    #     state: restarted
-    
-    # - name: Ждать восстановления сети
-    #   wait_for_connection:
-    #     timeout: 60
-    #     connect_timeout: 30
-
-# - name: Создание статической конфигурации pp-front в KVM VM из source
-#   hosts: pp-front
-#   become: yes
-#   # vars:
-#   #   static_ip: "192.168.122.20"
-#   #   gateway: "192.168.122.1"
-#   #   interface: "enp1s0"
-#   #   new_hostname: "pp-front"
-
-#   tasks:
-
-#     - name: Restart systemd-networkd
-#       systemd:
-#         name: systemd-networkd
-#         state: restarted
-
-#     - name: Удаление старого ключа
-#       command: ssh-keygen -R 192.168.122.20
-
-#     - name: Display completion message
-#       debug:
-#         msg: |
-#           ✅ Настройка завершена!
-#           Новое имя сервера: {{ new_hostname }}
-#           Статический IP: {{ static_ip }}
-#           Для применения изменений может потребоваться перезагрузка
+    - name: Fail playbook if connection not restored
+      ansible.builtin.fail:
+        msg: "Соединение не восстановилось после netplan apply. Проверьте: 1) Новый IP адрес 2) Сетевой интерфейс 3) SSH демон"
+      when: ansible_connection is failed  # Условие срабатывает только если предыдущая задача wait_for_connection завершилась ошибкой
+      ...

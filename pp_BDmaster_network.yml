@@ -1,0 +1,71 @@
+---
+- name: Создание статической конфигурации pp-front в KVM VM из source
+  hosts: source
+  become: yes
+  vars:
+    static_ip: "192.168.122.23"
+    gateway: "192.168.122.1"
+    interface: "enp1s0"
+    new_hostname: "pp-BDmaster"
+
+  tasks:
+    - name: Установка network tools
+      apt:
+        name: net-tools
+        state: present
+
+    - name: Статическая конфигураци IP для netplan
+      copy:
+        content: |
+          network:
+            version: 2
+            renderer: networkd
+            ethernets:
+              {{ interface }}:
+                dhcp4: no
+                addresses: [{{ static_ip }}/24]
+                gateway4: {{ gateway }}
+                nameservers:
+                  addresses: [192.168.122.1, 8.8.8.8, 8.8.4.4]
+        dest: /etc/netplan/50-cloud-init.yaml
+        owner: root
+        group: root
+        mode: 0644
+
+    # - name: Restart systemd-networkd
+    #   systemd:
+    #     name: systemd-networkd
+    #     state: restarted
+
+    # - name: Изменение hostname для pp-front
+    #   hostname:
+    #     name: "{{ new_hostname }}"
+
+    # - name: Update /etc/hosts file
+    #   lineinfile:
+    #     path: /etc/hosts
+    #     regex: '^127\.0\.1\.1'
+    #     line: '127.0.1.1 {{ new_hostname }}'
+    #     state: present
+
+    - name: Проверка имени хоста после перезагрузки
+      copy:
+        content: "{{ new_hostname }}"
+        dest: /etc/hostname
+        owner: root
+        group: root
+        mode: 0644
+
+    # - name: Удаление старого ключа
+    #   command: ssh-keygen -R 192.168.122.20
+
+    - name: Apply netplan configuration
+      command: netplan apply
+
+    - name: Display completion message
+      debug:
+        msg: |
+          ✅ Настройка завершена!
+          Новое имя сервера: {{ new_hostname }}
+          Статический IP: {{ static_ip }}
+          Для применения изменений может потребоваться перезагрузка

@@ -3,7 +3,7 @@
 2. Разобраться с методикой создания копий виртуалок. Записать тут пошаговые действия.
     
     Создаём клон виртуалки
-    sudo virt-clone --original ubuntu24.04 --name source_test --auto-clone
+    virt-clone --original ubuntu24.04 --name source_test --auto-clone
 
     Делаем очистку виртуалки
     sudo virt-sysprep -d source_test --hostname uu3 --operations defaults,-ssh-userdir
@@ -54,7 +54,7 @@
     192.168.122.11 - Ubuntu 22.04.5 CPU 2 mem 2048 disk 25Gb
 
 2.4. Создать виртуалку иходник, из которой создать виртуалку source, которая будет использоваться для создания 5 виртуальных машин.
-    Характеристики source:  статически ip 192.168.122.10
+    Характеристики source:  статически ip 192.168.122.11
                             ключ для входа по ssh
                             имя хоста source
 

@@ -1,12 +1,12 @@
 ---
 - name: Создание статической конфигурации pp-front в KVM VM из source
-  hosts: source
+  hosts: pp-back2
   become: yes
   vars:
-    static_ip: "192.168.122.20"
+    static_ip: "192.168.122.22"
     gateway: "192.168.122.1"
     interface: "enp1s0"
-    new_hostname: "pp-front"
+    new_hostname: "pp-back2"
 
   tasks:
     - name: Установка network tools
@@ -37,16 +37,16 @@
     #     name: systemd-networkd
     #     state: restarted
 
-    - name: Изменение hostname для pp-front
-      hostname:
-        name: "{{ new_hostname }}"
+    # - name: Изменение hostname для pp-front
+    #   hostname:
+    #     name: "{{ new_hostname }}"
 
-    - name: Update /etc/hosts file
-      lineinfile:
-        path: /etc/hosts
-        regex: '^127\.0\.1\.1'
-        line: '127.0.1.1 {{ new_hostname }}'
-        state: present
+    # - name: Update /etc/hosts file
+    #   lineinfile:
+    #     path: /etc/hosts
+    #     regex: '^127\.0\.1\.1'
+    #     line: '127.0.1.1 {{ new_hostname }}'
+    #     state: present
 
     - name: Проверка имени хоста после перезагрузки
       copy:

@@ -8,7 +8,7 @@ function cloneVM() {
     sudo virt-sysprep -d $VMname --hostname $VMname --operations defaults,-ssh-hostkeys,-ssh-userdir --run-command "systemctl enable ssh"
 }
 
-funstion startVM() {
+function startVM() {
     virsh start $VMname
     for i in {1..12}; do
         echo "Проверка доступности 22 порта на виртуалке $i/12:"

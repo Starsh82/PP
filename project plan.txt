@@ -54,6 +54,8 @@
     virsh setvcpus pp-front 1 --config
     virsh setvcpus pp-front 2 --maximum --config
 
+    virsh 
+
 2.3. Адреса "родительских" виртуалок
     192.168.122.10 - Ubuntu 24.04.3 CPU 2 mem 2048 disk 25Gb
     192.168.122.11 - Ubuntu 22.04.5 CPU 2 mem 2048 disk 25Gb

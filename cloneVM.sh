@@ -50,10 +50,10 @@ case $VMname in
         ;;
     pp-MLA)
         cloneVM
-        virsh setmaxmem source --size 8G --config
-        virsh setmem source --size 6G --config
-        virsh setvcpus pp-front 4 --maximum --config
-        virsh setvcpus pp-front 2 --config
+        virsh setmaxmem $VMname --size 8G --config
+        virsh setmem $VMname --size 4G --config
+        virsh setvcpus $VMname 4 --maximum --config
+        virsh setvcpus $VMname 2 --config
         startVM
         ansible-playbook pp_MLA_network.yml
         ;;

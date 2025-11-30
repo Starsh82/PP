@@ -2,9 +2,13 @@
 
 VMname=$1
 
+# Характеристики source: CPU=1 CPUmax=2 Mem=1G Memmax=2G
 function cloneVM() {
     virt-clone --original source --name $VMname --auto-clone
     sudo virt-sysprep -d $VMname --hostname $VMname --operations defaults,-ssh-hostkeys,-ssh-userdir --run-command "systemctl enable ssh"
+}
+
+funstion startVM() {
     virsh start $VMname
     for i in {1..12}; do
         echo "Проверка доступности 22 порта на виртуалке $i/12:"
@@ -21,30 +25,39 @@ function cloneVM() {
 case $VMname in
     pp-front)
         cloneVM
+        startVM
         ansible-playbook pp_front_network.yml
         ;;
     pp-back1)
         cloneVM
+        startVM
         ansible-playbook pp_back1_network.yml
         ;;
     pp-back2)
         cloneVM
+        startVM
         ansible-playbook pp_back2_network.yml
         ;;
     pp-BDmaster)
         cloneVM
+        startVM
         ansible-playbook pp_BDmaster_network.yml
         ;;
     pp-BDslave)
         cloneVM
+        startVM
         ansible-playbook pp_BDslave_network.yml
         ;;
     pp-MLA)
         cloneVM
+        virsh setmaxmem source --size 8G --config
+        virsh setmem source --size 6G --config
+        virsh setvcpus pp-front 4 --maximum --config
+        virsh setvcpus pp-front 2 --config
+        startVM
         ansible-playbook pp_MLA_network.yml
         ;;
     *)
         echo "Неизвестное название VM"
         ;;
 esac
-#ansible-playbook pp_BDslave_network.yml

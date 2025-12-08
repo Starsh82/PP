@@ -1,0 +1,37 @@
+- name: Configured webserver pp_front
+  hosts: pp_front
+  become: true
+  gather_facts: false
+  
+  handlers:
+    - name: Restart nginx
+      service:
+        name: nginx
+        state: restarted
+
+  tasks:
+    - name: Ensure nginx is installed
+      ansible.builting.apt:
+        name:
+          - nginx
+          - iptables
+        status: present
+        update_cache: true
+
+    - name: Copy config nginx
+      ansible.builting.template:
+        src: nginx.j2
+        dest: /etc/nginx/sites-avalible/wordpress
+
+    - name: Create symbolic link
+      ansible.builtin.file:
+        src: /etc/nginx/sites-avalible/wordpress
+        dest: /etc/nginx/sites-enabled/wordpress
+      owner: www-data
+      group: www-data
+      state: link
+
+    - name: remove default link
+      ansible.builtin.file:
+      path: /etc/nginx/sites-enabled/default
+      state: absent

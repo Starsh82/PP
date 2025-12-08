@@ -72,3 +72,8 @@
     - 192.168.122.23 pp-BDmaster CPU 1 mem 1024 disk 25Gb (MySQL source)
     - 192.168.122.24 pp-BDslave CPU 1 mem 1024 disk 25Gb (MySQL replica)
     - 192.168.122.25 pp-MLA CPU 2 mem 6144 disk 25Gb (grafana, ELK, prometheus)
+
+
+Установка MySQL
+sudo apt install mysql-server-8.0
+

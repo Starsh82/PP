@@ -1,0 +1,22 @@
+---
+- name: Configured MySQL servers pp-DBmaster pp-DMslave
+  hosts: Databases
+  become: true
+  vars_files: inventory/group_vars/PPvars.yml
+  gather_facts: false
+
+  tasks:
+    - name: Ensure MySQL is installed
+      ansible.builtin.apt:
+        name:
+          - mysql-server-8.0
+          - prometheus-node-exporter
+        state: present
+        update_cache: true
+    
+    - name: Ensure MySQL is runing and enabled
+      ansible.builtin.systemd:
+        name: mysql
+        state: started
+        enabled: true
+...

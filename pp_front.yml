@@ -1,8 +1,8 @@
 ---
-
 - name: Configured webserver pp_front
   hosts: pp-front
   become: true
+  vars_files: inventory/group_vars/PPvars.yml
   gather_facts: false
 
   handlers:
@@ -39,4 +39,10 @@
         path: /etc/nginx/sites-enabled/default
         state: absent
       notify: Restart nginx
+
+    - name: Start and enable service
+      systemd:
+        name: nginx
+        state: started
+        enabled: yes
 ...

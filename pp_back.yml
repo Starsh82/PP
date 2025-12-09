@@ -1,51 +1,51 @@
 ---
 - name: Configured webservers pp-back1 pp-back2
-  hosts: pp-back1
+  hosts: Web_back
   become: true
   vars_files: inventory/group_vars/PPvars.yml
   gather_facts: false
 
   vars:
     download_url: "https://wordpress.org/latest.tar.gz"
-    wpdir: "/var/www/html/wordpress"  
-  
+    wpdir: "/var/www/html/wordpress"
+
   tasks:
-  - name: Ensure nginx and wordpress is installed
-    ansible.builtin.apt:
-      name:
-      - wget
-      - nginx
-      - prometheus-node-exporter 
-      state: present
-      update_cache: true
+    - name: Ensure nginx and wordpress is installed
+      ansible.builtin.apt:
+        name:
+          - wget
+          - nginx
+          - prometheus-node-exporter
+        state: present
+        update_cache: true
 
-  - name: Download WordPress
-    ansible.builtin.get_url:
-      url: "{{ download_url }}"
-      dest: "/tmp/latest.tar.gz"
+    - name: Download WordPress
+      ansible.builtin.get_url:
+        url: "{{ download_url }}"
+        dest: "/tmp/latest.tar.gz"
 
-  - name: Creating directory for WordPress
-    ansible.builtin.file:
-      path: "{{ wpdir }}"
-      state: "directory"
-      owner: "www-data"
-      group: "www-data"
+    # - name: Creating directory for WordPress
+    #   ansible.builtin.file:
+    #     path: "{{ wpdir }}"
+    #     state: "directory"
+    #     owner: "www-data"
+    #     group: "www-data"
 
-  - name: Unpack WordPress installation
-    ansible.builtin.shell: |
-      tar -xzvf latest.tar.gz -d {{ wpdir }} &&
-      chown -R www-data:www-data {{ wpdir }}
+    - name: Unpack WordPress installation
+      ansible.builtin.shell: |
+        tar -xzf /tmp/latest.tar.gz --directory=/var/www/html &&
+        chown -R www-data:www-data {{ wpdir }}
 
-  - name: Copy config for wordpress
-    ansible.builtin.template:
-      src: wp-config.php.j2
-      dest: "/var/www/html/wordpress/wp-config.php"
-      owner: www-data
-      group: www-data
-      mode: '0600'
+    - name: Copy config for wordpress
+      ansible.builtin.template:
+        src: wp-config.php.j2
+        dest: "/var/www/html/wordpress/wp-config.php"
+        owner: www-data
+        group: www-data
+        mode: '0600'
 
-  - name: Restart nginx
-    ansible.builtin.systemd:
-     name: nginx
-     state: restarted
+    - name: Restart nginx
+      ansible.builtin.systemd:
+        name: nginx
+        state: restarted
 ...

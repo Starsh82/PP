@@ -18,6 +18,7 @@
         name:
           - nginx
           - iptables
+          - prometheus-node-exporter
         state: present
         update_cache: true
 

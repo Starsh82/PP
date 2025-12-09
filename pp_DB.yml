@@ -5,6 +5,13 @@
   vars_files: inventory/group_vars/PPvars.yml
   gather_facts: false
 
+  handlers:
+    - name: Restart mysql
+      become: true
+      ansible.builtin.service:
+        name: mysql
+        state: restarted
+
   tasks:
     - name: Ensure MySQL is installed
       ansible.builtin.apt:
@@ -13,7 +20,7 @@
           - prometheus-node-exporter
         state: present
         update_cache: true
-    
+
     - name: Ensure MySQL is runing and enabled
       ansible.builtin.systemd:
         name: mysql

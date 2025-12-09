@@ -35,3 +35,4 @@
       ansible.builtin.file:
       path: /etc/nginx/sites-enabled/default
       state: absent
+      notify: Restart nginx

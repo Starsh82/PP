@@ -1,5 +1,5 @@
 ---
-- name: Configured webserver pp_front
+- name: Configured webserver pp-front
   hosts: pp-front
   become: true
   vars_files: inventory/group_vars/PPvars.yml

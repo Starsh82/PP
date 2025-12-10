@@ -26,27 +26,27 @@ case $VMname in
     pp-front)
         cloneVM
         startVM
-        ansible-playbook pp_front_network.yml
+        ansible-playbook VMnetwork/pp_front_network.yml
         ;;
     pp-back1)
         cloneVM
         startVM
-        ansible-playbook pp_back1_network.yml
+        ansible-playbook VMnetwork/pp_back1_network.yml
         ;;
     pp-back2)
         cloneVM
         startVM
-        ansible-playbook pp_back2_network.yml
+        ansible-playbook VMnetwork/pp_back2_network.yml
         ;;
     pp-DBmaster)
         cloneVM
         startVM
-        ansible-playbook pp_DBmaster_network.yml
+        ansible-playbook VMnetwork/pp_DBmaster_network.yml
         ;;
     pp-DBslave)
         cloneVM
         startVM
-        ansible-playbook pp_DBslave_network.yml
+        ansible-playbook VMnetwork/pp_DBslave_network.yml
         ;;
     pp-MLA)
         cloneVM
@@ -55,7 +55,7 @@ case $VMname in
         virsh setvcpus $VMname 4 --maximum --config
         virsh setvcpus $VMname 2 --config
         startVM
-        ansible-playbook pp_MLA_network.yml
+        ansible-playbook VMnetwork/pp_MLA_network.yml
         ;;
     *)
         echo "Неизвестное название VM"

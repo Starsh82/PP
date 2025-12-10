@@ -3,10 +3,10 @@
   hosts: source
   become: yes
   vars:
-    static_ip: "192.168.122.24"
+    static_ip: "192.168.122.23"
     gateway: "192.168.122.1"
     interface: "enp1s0"
-    new_hostname: "pp-BDslave"
+    new_hostname: "pp-DBmaster"
 
   tasks:
 

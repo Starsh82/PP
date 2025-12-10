@@ -38,15 +38,15 @@ case $VMname in
         startVM
         ansible-playbook pp_back2_network.yml
         ;;
-    pp-BDmaster)
+    pp-DBmaster)
         cloneVM
         startVM
-        ansible-playbook pp_BDmaster_network.yml
+        ansible-playbook pp_DBmaster_network.yml
         ;;
-    pp-BDslave)
+    pp-DBslave)
         cloneVM
         startVM
-        ansible-playbook pp_BDslave_network.yml
+        ansible-playbook pp_DBslave_network.yml
         ;;
     pp-MLA)
         cloneVM

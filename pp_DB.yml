@@ -5,7 +5,7 @@
   vars_files:
     - inventory/group_vars/PPvars.yml
     - inventory/group_vars/DBvars.yml
-  gather_facts: false
+  gather_facts: true
 
   handlers:
     - name: Restart mysql
@@ -19,6 +19,8 @@
       ansible.builtin.apt:
         name:
           - mysql-server-8.0
+          - mysql-client
+          - python3-mysqldb
           - prometheus-node-exporter
         state: present
         update_cache: true
@@ -33,15 +35,15 @@
       ansible.builtin.template:
         src: mysqld_main.cnf.j2
         dest: /etc/mysql/mysql.conf.d/mysqld.cnf
-      notify: restart mysql
-      when: (ansible_hostname == "pp-DBmaster")
+      notify: Restart mysql
+      when: ansible_hostname == "pp-DBmaster"
 
     - name: Copy replica config file
       ansible.builtin.template:
         src: mysqld_replica.cnf.j2
         dest: /etc/mysql/mysql.conf.d/mysqld.cnf
-      notify: restart mysql
-      when: (ansible_hostname == "pp-DBslave")   
+      notify: Restart mysql
+      when: ansible_hostname == "pp-DBslave"
 
     - name: Create main user
       community.mysql.mysql_user:
@@ -50,41 +52,41 @@
         host: '%'
         password: '{{ mysql_replica_password }}'
         priv: '*.*:REPLICATION SLAVE'
-        state: present  
-      when: (ansible_hostname == "pp-DBmaster")
+        state: present
+      when: ansible_hostname == "pp-DBmaster"
 
     - name: Configure replica
-      mysql_replication:
+      community.mysql.mysql_replication:
         login_password: '{{ mysql_root_password }}'
         mode: changeprimary
         master_host: "{{DBmaster}}"
         master_port: 3306
         master_user: replica
         master_password: '{{ mysql_replica_password }}'
-        master_auto_position: yes
+        master_auto_position: true
       when: ansible_hostname == "pp-DBslave"
 
     - name: Start replica
-      mysql_replication:
+      community.mysql.mysql_replication:
         login_password: '{{ mysql_root_password }}'
         mode: startreplica
-      when: ansible_hostname == "pp-DBslave"   
+      when: ansible_hostname == "pp-DBslave"
 
     - name: Create a new database with name 'wordpress'
       community.mysql.mysql_db:
         name: wordpress
         state: present
         login_unix_socket: /run/mysqld/mysqld.sock
-      when: (ansible_hostname == "pp-DBmaster")
+      when: ansible_hostname == "pp-DBmaster"
 
     - name: Create user Wordpress and grant privileges on wordpress
       community.mysql.mysql_user:
         state: present
         name: wordpress
-        password: 12345dd
+        password: wordpress
         priv:
-          'wordpress.*': 'ALL,GRANT'  
-
+          'wordpress.*': 'ALL,GRANT'
+#
     # - name: Configure iptables rules from template
     #   template:
     #     src: iptables-rules.j2

@@ -2,7 +2,9 @@
 - name: Configured MySQL servers pp-DBmaster pp-DMslave
   hosts: Databases
   become: true
-  vars_files: inventory/group_vars/PPvars.yml
+  vars_files:
+    - inventory/group_vars/PPvars.yml
+    - inventory/group_vars/DBvars.yml
   gather_facts: false
 
   handlers:
@@ -26,4 +28,67 @@
         name: mysql
         state: started
         enabled: true
+
+    - name: Copy main config file
+      ansible.builtin.template:
+        src: mysqld_main.cnf.j2
+        dest: /etc/mysql/mysql.conf.d/mysqld.cnf
+      notify: restart mysql
+      when: (ansible_hostname == "pp-DBmaster")
+
+    - name: Copy replica config file
+      ansible.builtin.template:
+        src: mysqld_replica.cnf.j2
+        dest: /etc/mysql/mysql.conf.d/mysqld.cnf
+      notify: restart mysql
+      when: (ansible_hostname == "pp-DBslave")   
+
+    - name: Create main user
+      community.mysql.mysql_user:
+        login_password: '{{ mysql_root_password }}'
+        name: replica
+        host: '%'
+        password: '{{ mysql_replica_password }}'
+        priv: '*.*:REPLICATION SLAVE'
+        state: present  
+      when: (ansible_hostname == "pp-DBmaster")
+
+    - name: Configure replica
+      mysql_replication:
+        login_password: '{{ mysql_root_password }}'
+        mode: changeprimary
+        master_host: "{{DBmaster}}"
+        master_port: 3306
+        master_user: replica
+        master_password: '{{ mysql_replica_password }}'
+        master_auto_position: yes
+      when: ansible_hostname == "pp-DBslave"
+
+    - name: Start replica
+      mysql_replication:
+        login_password: '{{ mysql_root_password }}'
+        mode: startreplica
+      when: ansible_hostname == "pp-DBslave"   
+
+    - name: Create a new database with name 'wordpress'
+      community.mysql.mysql_db:
+        name: wordpress
+        state: present
+        login_unix_socket: /run/mysqld/mysqld.sock
+      when: (ansible_hostname == "pp-DBmaster")
+
+    - name: Create user Wordpress and grant privileges on wordpress
+      community.mysql.mysql_user:
+        state: present
+        name: wordpress
+        password: 12345dd
+        priv:
+          'wordpress.*': 'ALL,GRANT'  
+
+    # - name: Configure iptables rules from template
+    #   template:
+    #     src: iptables-rules.j2
+    #     dest: /etc/iptables/rules.v4
+    #     mode: 0644
+    #   notify: Apply iptables rules
 ...

@@ -1,0 +1,2 @@
+ mysql_replica_password: ""
+ mysql_root_password: "123"

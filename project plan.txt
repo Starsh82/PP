@@ -77,3 +77,6 @@
 Установка MySQL
 sudo apt install mysql-server-8.0
 
+
+select * from user where user='repl'\G
+

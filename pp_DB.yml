@@ -72,21 +72,22 @@
         mode: startreplica
       when: ansible_hostname == "pp-DBslave"
 
-    # - name: Create a new database with name 'wordpress'
-    #   community.mysql.mysql_db:
-    #     name: wordpress
-    #     state: present
-    #     login_unix_socket: /run/mysqld/mysqld.sock
-    #   when: ansible_hostname == "pp-DBmaster"
+    - name: Create a new database with name 'wordpress'
+      community.mysql.mysql_db:
+        name: wordpress
+        state: present
+        login_unix_socket: /run/mysqld/mysqld.sock
+      when: ansible_hostname == "pp-DBmaster"
 
-    # - name: Create user Wordpress and grant privileges on wordpress
-    #   community.mysql.mysql_user:
-    #     state: present
-    #     name: wordpress
-    #     password: wordpress
-    #     priv:
-    #       'wordpress.*': 'ALL,GRANT'
-#
+    - name: Create user Wordpress and grant privileges on wordpress
+      community.mysql.mysql_user:
+        login_password: '{{ mysql_root_password }}'
+        name: wordpress
+        host: '%'
+        password: wordpress
+        priv: 'wordpress.*:ALL,GRANT'
+      when: ansible_hostname == "pp-DBmaster"
+
     # - name: Configure iptables rules from template
     #   template:
     #     src: iptables-rules.j2

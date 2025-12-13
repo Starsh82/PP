@@ -10,7 +10,7 @@
     wpdir: "/var/www/html/wordpress"
 
   tasks:
-    - name: Ensure nginx and wordpress is installed
+    - name: Ensure apache2 and wordpress is installed
       ansible.builtin.apt:
         name:
           - wget

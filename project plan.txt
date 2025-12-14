@@ -80,3 +80,14 @@ sudo apt install mysql-server-8.0
 
 select * from user where user='repl'\G
 
+
+
+Ports:
+    3000 - grafana
+    5044 - filebeat
+    5140
+    5601 - kibana
+    9090 - prometheus
+    9093 - alertmanager
+    9094 - 
+    9100 - node exporter

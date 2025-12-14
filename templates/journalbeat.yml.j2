@@ -1,0 +1,7 @@
+output.logstash:
+  hosts: ["{{Mon_Log_ip}}:5044"]
+  timeout: 15
+
+processors:
+  - add_host_metadata: ~
+  - add_locale: ~

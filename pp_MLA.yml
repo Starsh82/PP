@@ -8,6 +8,22 @@
   vars:
     dirpack: "/packages"
 
+  handlers:
+    - name: Restart prometheus
+      ansible.builtin.systemd:
+        name: prometheus
+        state: restarted
+
+    - name: Restart alertmanager
+      systemd:
+        name: prometheus-alertmanager
+        state: restarted
+
+    - name: Restart grafana
+      systemd:
+        name: grafana-server
+        state: restarted 
+
   tasks:
     - name: Ensure prometheus, ... is installed
       ansible.builtin.apt:

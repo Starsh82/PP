@@ -25,6 +25,8 @@ function startVM() {
 case $VMname in
     pp-front)
         cloneVM
+        virsh setvcpus $VMname 2 --maximum --config
+        virsh setvcpus $VMname 1 --config
         startVM
         ansible-playbook VMnetwork/pp_front_network.yml
         ;;
@@ -53,7 +55,7 @@ case $VMname in
         virsh setmaxmem $VMname --size 8G --config
         virsh setmem $VMname --size 4G --config
         virsh setvcpus $VMname 4 --maximum --config
-        virsh setvcpus $VMname 2 --config
+        virsh setvcpus $VMname 4 --config
         startVM
         ansible-playbook VMnetwork/pp_MLA_network.yml
         ;;

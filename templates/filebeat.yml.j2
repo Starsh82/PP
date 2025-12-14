@@ -1,0 +1,78 @@
+# Filebeat configuration
+filebeat.registry.path: /var/lib/filebeat/registry
+
+# ============================== Filebeat inputs ===============================
+filebeat.inputs:
+- type: filestream
+  id: system-logs
+  enabled: true
+  paths:
+    {% for path in filebeat_logs_paths %}
+    - {{ path }}
+    {% endfor %}
+  
+  fields:
+    log_source: "system"
+    log_type: "filestream"
+    client_host: "{{ inventory_hostname }}"
+  fields_under_root: true
+  parsers:
+    - multiline:
+        type: pattern
+        pattern: '^[A-Z][a-z]{2} [0-9]{1,2} '
+        negate: true
+        match: after
+
+- type: filestream
+  id: application-logs
+  enabled: true
+  paths:
+    {% for path in app_logs %}
+    - {{ path }}
+    {% endfor %}
+  
+  fields:
+    log_source: "application"
+    log_type: "filestream"
+    client_host: "{{ inventory_hostname }}"
+  fields_under_root: true
+
+- type: journald
+  id: journald-logs
+  enabled: true
+  fields:
+    log_source: "journald"
+    client_host: "{{ inventory_hostname }}"
+  fields_under_root: true
+
+# ============================== Filebeat modules ==============================
+filebeat.config.modules:
+  path: ${path.config}/modules.d/*.yml
+  reload.enabled: true
+
+# ================================= Processors =================================
+processors:
+  - add_host_metadata:
+      when.not.contains.tags: forwarded
+  - add_cloud_metadata: ~
+  - drop_event:
+      when:
+        or:
+          - equals:
+              message: ""
+          - equals:
+              message: " "
+
+# ================================== Output ====================================
+output.logstash:
+  hosts: ["{{ elk_server_ip }}:{{ logstash_beats_port }}"]
+  ssl.enabled: false
+
+# ================================== Logging ===================================
+logging.level: info
+logging.to_files: true
+logging.files:
+  path: /var/log/filebeat
+  name: filebeat.log
+  keepfiles: 7
+  permissions: 0644

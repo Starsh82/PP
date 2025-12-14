@@ -1,0 +1,36 @@
+---
+- name: Configured monitoring, loging and alerting server
+  hosts: pp-MLA
+  bacome: true
+  vars_files: inventory/group_vars/PPvars.yml
+  gather_facts: false
+
+  vars:
+    dirpack: "/packages"
+
+  tasks:
+    - name: Ensure prometheus, ... is installed
+      ansible.builtin.apt:
+        name:
+          - prometheus
+          - prometheus-alertmanager
+        state: present
+        update_cache: true
+  
+    - name: Copy prometheus configs
+      ansible.builtin.template:
+        src: prometheus.yml.j2
+        dest: /etc/prometheus/prometheus.yml
+        owner: prometheus
+        group: prometheus
+        mode: '0600'
+      notify: restart prometheus
+
+    - name: Install grafana
+      ansible.builtin.shell:
+
+
+
+
+
+...

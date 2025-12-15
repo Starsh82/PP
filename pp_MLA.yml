@@ -80,13 +80,30 @@
         src: /tmp/grafana-backup.tar.gz
         dest: /
         remote_src: yes
-        owner: root
-        group: root
+        owner: grafana
+        group: grafana
         mode: '0644'
         directory_mode: '0755'
       notify: Restart grafana
 
-    - name: 
+    - name: Create config jvm.options
+      ansible.builtin.copy:
+        dest: /etc/elasticsearch/jvm.options.d/custom_jvm.options
+        content: |
+          -Xms2g
+          -Xmx2g
+        owner: root
+        group: elasticsearch
+        mode: '0644'
+
+    - name: Copy elasticsearch config
+      ansible.builtin.template:
+        src: elasticsearch.yml.j2
+        dest: /etc/elasticsearch/elasticsearch.yml
+        owner: root
+        group: root
+        mode: '0640'
+      notify: Restart elasticsearch
 
 
 

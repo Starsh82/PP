@@ -1,7 +1,7 @@
 ---
 - name: Configured monitoring, loging and alerting server
   hosts: pp-MLA
-  bacome: true
+  become: true
   vars_files: inventory/group_vars/PPvars.yml
   gather_facts: false
 
@@ -26,7 +26,7 @@
       ansible.builtin.systemd:
         name: grafana-server
         state: restarted
-    
+
     - name: Restart elasticsearch
       ansible.builtin.systemd:
         name: elasticsearch
@@ -50,10 +50,10 @@
           - prometheus-alertmanager
         state: present
         update_cache: true
-  
+
     - name: Copy prometheus configs
       ansible.builtin.template:
-        src: prometheus.yml.j2
+        src: MLA/prometheus.yml.j2
         dest: /etc/prometheus/prometheus.yml
         owner: prometheus
         group: prometheus
@@ -69,44 +69,49 @@
         - "{{ logstash_deb }}"
         - "{{ kibana_deb }}"
         - "{{ filebeat_deb }}"
-    
+
     - name: Copy all config files grafana
       ansible.builtin.copy:
-        src: grafana-config.tar.gz
+        src: files/grafana-config.tar.gz
         dest: /tmp/
 
     - name: Extract grafana directory /etc/grafana
-      ansible.builtin.unarchive:
-        src: /tmp/grafana-backup.tar.gz
-        dest: /
-        remote_src: yes
-        owner: grafana
-        group: grafana
-        mode: '0644'
-        directory_mode: '0755'
+      ansible.builtin.shell:
+        tar -xzf /tmp/grafana-config.tar.gz --directory=/
       notify: Restart grafana
 
     - name: Create config jvm.options
       ansible.builtin.copy:
-        dest: /etc/elasticsearch/jvm.options.d/custom_jvm.options
-        content: |
-          -Xms2g
-          -Xmx2g
+        src: MLA/jvm.options.j2
+        dest: /etc/elasticsearch/jvm.options.d/jvm.options
         owner: root
         group: elasticsearch
         mode: '0644'
 
     - name: Copy elasticsearch config
       ansible.builtin.template:
-        src: elasticsearch.yml.j2
+        src: MLA/elasticsearch.yml.j2
         dest: /etc/elasticsearch/elasticsearch.yml
         owner: root
         group: root
         mode: '0640'
       notify: Restart elasticsearch
 
+    - name: Copy logstash congig
+      ansible.builtin.template:
+        src: MLA/logstash.conf.j2
+        dest: /etc/logstash/conf.d/logstash.conf
+        owner: root
+        group: root
+        mode: '0644'
+      notify: Restart logstash
 
-
-
-
+    - name: Настройка Kibana
+      ansible.builtin.template:
+        src: MLA/kibana.yml.j2
+        dest: /etc/kibana/kibana.yml
+        owner: root
+        group: root
+        mode: '0644'
+      notify: Restart kibana
 ...

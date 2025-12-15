@@ -6,7 +6,10 @@
   gather_facts: false
 
   vars:
-    dirpack: "/packages"
+    grafana_deb: "/packages/grafana-enterprise_12.3.0_19497075765_linux_amd64.deb"
+    elasticsearch_deb: "/packages/elasticsearch-9.2.2-amd64.deb"
+    logstash_deb: "/packages/logstash-9.2.2-amd64.deb"
+    kibana_deb: "/packages/kibana-9.2.2-amd64.deb"
 
   handlers:
     - name: Restart prometheus
@@ -15,17 +18,32 @@
         state: restarted
 
     - name: Restart alertmanager
-      systemd:
+      ansible.builtin.systemd:
         name: prometheus-alertmanager
         state: restarted
 
     - name: Restart grafana
-      systemd:
+      ansible.builtin.systemd:
         name: grafana-server
-        state: restarted 
+        state: restarted
+    
+    - name: Restart elasticsearch
+      ansible.builtin.systemd:
+        name: elasticsearch
+        state: restarted
+
+    - name: Restart logstash
+      ansible.builtin.systemd:
+        name: logstash
+        state: restarted
+
+    - name: Restart kibana
+      ansible.builtin.systemd:
+        name: kibana
+        state: restarted
 
   tasks:
-    - name: Ensure prometheus, ... is installed
+    - name: Ensure prometheus is installed
       ansible.builtin.apt:
         name:
           - prometheus
@@ -40,10 +58,35 @@
         owner: prometheus
         group: prometheus
         mode: '0600'
-      notify: restart prometheus
+      notify: Restart prometheus
 
-    - name: Install grafana
-      ansible.builtin.shell:
+    - name: Install deb packages (grafana, ELK, filebeat)
+      ansible.builtin.apt:
+        deb: "{{ item }}"
+      loop:
+        - "{{ grafana_deb }}"
+        - "{{ elasticsearch_deb }}"
+        - "{{ logstash_deb }}"
+        - "{{ kibana_deb }}"
+        - "{{ filebeat_deb }}"
+    
+    - name: Copy all config files grafana
+      ansible.builtin.copy:
+        src: grafana-config.tar.gz
+        dest: /tmp/
+
+    - name: Extract grafana directory /etc/grafana
+      ansible.builtin.unarchive:
+        src: /tmp/grafana-backup.tar.gz
+        dest: /
+        remote_src: yes
+        owner: root
+        group: root
+        mode: '0644'
+        directory_mode: '0755'
+      notify: Restart grafana
+
+    - name: 
 
 
 

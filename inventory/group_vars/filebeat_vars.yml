@@ -1,0 +1,35 @@
+# Filebeat package
+filebeat_deb: /packages/filebeat-9.2.2-amd64.deb
+
+Mon_Log_ip: '192.168.122.25'
+# ELK server configuration
+elk_server_ip: "192.168.122.25"
+logstash_beats_port: 5044
+logstash_syslog_port: 5140
+
+# Filebeat filestream configuration
+filebeat_logs_paths:
+  - /var/log/syslog
+  - /var/log/auth.log
+  - /var/log/secure
+  - /var/log/messages
+  - /var/log/*.log
+
+# Application specific logs for filestream
+app_logs:
+  - /var/log/nginx/access.log
+  - /var/log/nginx/error.log
+  - /var/log/apache2/access.log
+  - /var/log/apache2/error.log
+  - /var/log/mysql/error.log
+  - /var/log/mysql/slow.log
+  - /var/log/application/*.log
+  - /opt/*/logs/*.log
+  - /var/log/grafana/grafana.log
+  - /var/log/prometheus/*.log
+
+# Filebeat version
+filebeat_version: "9.2.2"
+
+# Performance tuning
+filebeat_max_procs: 1

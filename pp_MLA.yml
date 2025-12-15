@@ -2,7 +2,9 @@
 - name: Configured monitoring, loging and alerting server
   hosts: pp-MLA
   become: true
-  vars_files: inventory/group_vars/PPvars.yml
+  vars_files:
+    - inventory/group_vars/PPvars.yml
+    - inventory/group_vars/filebeat_vars.yml
   gather_facts: false
 
   vars:
@@ -57,7 +59,7 @@
         dest: /etc/prometheus/prometheus.yml
         owner: prometheus
         group: prometheus
-        mode: '0600'
+        mode: '0644'
       notify: Restart prometheus
 
     - name: Install deb packages (grafana, ELK, filebeat)
@@ -70,6 +72,12 @@
         - "{{ kibana_deb }}"
         - "{{ filebeat_deb }}"
 
+    - name: Enable grafana
+      ansible.builtin.service:
+        name: grafana-server
+        enabled: true
+        state: 'started'
+    
     - name: Copy all config files grafana
       ansible.builtin.copy:
         src: files/grafana-config.tar.gz
@@ -80,8 +88,8 @@
         tar -xzf /tmp/grafana-config.tar.gz --directory=/
       notify: Restart grafana
 
-    - name: Create config jvm.options
-      ansible.builtin.copy:
+    - name: Copy config jvm.options
+      ansible.builtin.template:
         src: MLA/jvm.options.j2
         dest: /etc/elasticsearch/jvm.options.d/jvm.options
         owner: root
@@ -93,25 +101,41 @@
         src: MLA/elasticsearch.yml.j2
         dest: /etc/elasticsearch/elasticsearch.yml
         owner: root
-        group: root
-        mode: '0640'
-      notify: Restart elasticsearch
+        group: elasticsearch
+        mode: '0644'
 
-    - name: Copy logstash congig
+    - name: Copy logstash config
       ansible.builtin.template:
         src: MLA/logstash.conf.j2
         dest: /etc/logstash/conf.d/logstash.conf
         owner: root
         group: root
         mode: '0644'
-      notify: Restart logstash
 
-    - name: Настройка Kibana
+    - name: Copy kibana config
       ansible.builtin.template:
         src: MLA/kibana.yml.j2
         dest: /etc/kibana/kibana.yml
         owner: root
         group: root
         mode: '0644'
-      notify: Restart kibana
+
+    - name: Copy filebeat config
+      ansible.builtin.template:
+        src: filebeat.yml.j2
+        dest: /etc/filebeat/filebeat.yml
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Enable service of ELK
+      ansible.builtin.service:
+        name: "{{ item }}"
+        enabled: true
+        state: 'started'
+      loop:
+        - kibana
+        - logstash
+        - filebeat
+        - elasticsearch
 ...

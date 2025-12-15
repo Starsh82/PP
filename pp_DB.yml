@@ -5,6 +5,7 @@
   vars_files:
     - inventory/group_vars/PPvars.yml
     - inventory/group_vars/DBvars.yml
+    - inventory/group_vars/filebeat_vars.yml
   gather_facts: true
 
   handlers:
@@ -87,6 +88,24 @@
         password: wordpress
         priv: 'wordpress.*:ALL,GRANT'
       when: ansible_hostname == "pp-DBmaster"
+
+    - name: Install deb package filebeat
+      ansible.builtin.apt:
+        deb: "{{ filebeat_deb }}"
+
+    - name: Copy filebeat config
+      ansible.builtin.template:
+        src: filebeat.yml.j2
+        dest: /etc/filebeat/filebeat.yml
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Enable filebeat
+      ansible.builtin.service:
+        name: filebeat
+        enabled: true
+        state: 'started'
 
     # - name: Configure iptables rules from template
     #   template:

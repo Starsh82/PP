@@ -1,0 +1,13 @@
+---
+#- name: Start playbook pp_front.yml
+include_playbook: pp_front.yml
+
+#- name: Start playbook pp_back.yml
+include_playbook: pp_back.yml
+
+#- name: Start playbook pp_DB.yml
+include_playbook: pp_DB.yml
+
+# - name: Start playbook pp_MLA.yml
+#   include_playbook: pp_MLA.yml
+...

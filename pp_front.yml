@@ -2,7 +2,9 @@
 - name: Configured webserver pp-front
   hosts: pp-front
   become: true
-  vars_files: inventory/group_vars/PPvars.yml
+  vars_files:
+    - inventory/group_vars/PPvars.yml
+    - inventory/group_vars/filebeat_vars.yml
   gather_facts: false
 
   handlers:
@@ -46,4 +48,22 @@
         name: nginx
         state: started
         enabled: yes
+
+    - name: Install deb package filebeat
+      ansible.builtin.apt:
+        deb: "{{ filebeat_deb }}"
+
+    - name: Copy filebeat config
+      ansible.builtin.template:
+        src: filebeat.yml.j2
+        dest: /etc/filebeat/filebeat.yml
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Enable filebeat
+      ansible.builtin.service:
+        name: filebeat
+        enabled: true
+        state: 'started'
 ...

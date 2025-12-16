@@ -47,7 +47,7 @@
       systemd:
         name: nginx
         state: started
-        enabled: yes
+        enabled: true
 
     - name: Install deb package filebeat
       ansible.builtin.apt:
@@ -66,4 +66,18 @@
         name: filebeat
         enabled: true
         state: 'started'
+
+    - name: Install iptables-persistent
+      ansible.builtin.apt:
+        name: iptables-persistent
+        state: present
+
+    - name: Configure iptables rules from template
+      ansible.builtin.template:
+        src: iptables-rules-web.j2
+        dest: /etc/iptables/rules.v4
+        mode: 0644
+
+    - name: Apply iptables rules
+      ansible.builtin.command: iptables-restore /etc/iptables/rules.v4
 ...

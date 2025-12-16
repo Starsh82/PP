@@ -66,6 +66,7 @@
         master_password: '{{ mysql_replica_password }}'
         master_auto_position: true
       when: ansible_hostname == "pp-DBslave"
+      ignore_errors: true
 
     - name: Start replica
       community.mysql.mysql_replication:

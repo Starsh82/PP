@@ -1,0 +1,74 @@
+---
+- name: Backup Database
+  hosts: pp-DBslave
+  become: true
+  gather_facts: true
+  # vars:
+  #   db_name: wordpress
+  #   db_user_name: wordpress
+  #   db_user_password: wordpress
+
+  tasks:
+    - name: Create variables
+      set_fact:
+        db_file_name: "/tmp/fullbackup_{{ ansible_date_time.epoch }}.sql"
+
+    - name: Confirm hostname
+      ansible.builtin.debug:
+        msg: Logged into the server.
+
+    - name: Download Database to server
+      ansible.builtin.shell: |
+        mysqldump -u root -p123 \
+          --all-databases \
+          --add-drop-table \
+          --add-locks \
+          --create-options \
+          --disable-keys \
+          --extended-insert \
+          --single-transaction \
+          --quick \
+          --set-charset \
+          --events \
+          --routines \
+          --triggers \
+          > "{{ db_file_name }}"
+
+    - name: Wait until the database backup completed on server
+      wait_for:
+        path: "{{ db_file_name }}"
+        state: present
+        msg: "Timeout to find file {{ db_file_name }}"
+
+    - name: Copy backups to pp-front
+      ansible.builtin.shell: |
+        rsync -avz -e ssh /tmp/fullbackup_*.sql starsh@192.168.122.20:/tmp/
+      delegate_to: "pp-DBslave"
+      become: false
+
+    # - name: Copy backups to pp-front
+    #   ansible.builtin.synchronize:
+    #     src: "/tmp/fullbackup_*.sql"
+    #     dest: "/tmp/"
+    #     delegate_to: "pp-DBslave"
+    #   become: false
+
+    # - name: Copy backups to pp-front
+    #   ansible.builtin.copy:
+    #     src: "/tmp/fullbackup_*.sql"
+    #     dest: "/tmp/"
+    #     delegate_to: "starsh@192.168.122.20"
+
+    # - name: Copy backups to pp-front
+    #   ansible.builtin.shell: "scp /tmp/fullbackup_*.sql starsh@192.168.122.20:/tmp/"
+
+    # - name: Downloading backup to local computer
+    #   ansible.builtin.fetch:
+    #     src: "{{ db_file_name }}"
+    #     dest: "tmp/{{ db_file_name }}"
+    #     flat: true
+
+    - name: Download completed
+      debug:
+        msg: Database have been downloaded successfully.
+...

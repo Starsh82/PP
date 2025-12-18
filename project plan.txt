@@ -80,7 +80,9 @@ sudo apt install mysql-server-8.0
 
 select * from user where user='repl'\G
 
-
+Админка wordpress:
+    92.168.122.20/wp-admin
+    test 123
 
 Ports:
     3000 - grafana
@@ -94,8 +96,8 @@ Ports:
     9200 - 
 
 Надо доделать:
-    - алертинг
+    + алертинг
     - https
-    - фаервол
+    + фаервол
     - бакап и восстановление базы
     - нарисовать схему

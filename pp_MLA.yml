@@ -62,6 +62,24 @@
         mode: '0644'
       notify: Restart prometheus
 
+    - name: Copy alert rules
+      ansible.builtin.copy:
+        src: templates/MLA/rules.yml
+        dest: /etc/prometheus/rules.yml
+        owner: prometheus
+        group: prometheus
+        mode: '0644'
+      notify: Restart prometheus
+
+    - name: Copy prometheus-alertmanager config
+      ansible.builtin.template:
+        src: MLA/alertmanager.yml.j2
+        dest: /etc/prometheus/alertmanager.yml
+        owner: prometheus
+        group: prometheus
+        mode: '0644'
+      notify: Restart alertmanager
+
     - name: Install deb packages (grafana, ELK, filebeat)
       ansible.builtin.apt:
         deb: "{{ item }}"
@@ -77,7 +95,7 @@
         name: grafana-server
         enabled: true
         state: 'started'
-    
+
     - name: Copy all config files grafana
       ansible.builtin.copy:
         src: files/grafana-config.tar.gz

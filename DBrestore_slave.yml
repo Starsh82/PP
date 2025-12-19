@@ -1,6 +1,6 @@
 ---
-- name: Configured MySQL servers pp-DBmaster pp-DMslave
-  hosts: Databases
+- name: Configured MySQL servers pp-DMslave and restore databases
+  hosts: pp-DBslave
   become: true
   vars_files:
     - inventory/group_vars/PPvars.yml
@@ -32,35 +32,41 @@
         state: started
         enabled: true
 
-    - name: Copy main config file
-      ansible.builtin.template:
-        src: mysqld_main.cnf.j2
-        dest: /etc/mysql/mysql.conf.d/mysqld.cnf
-      notify: Restart mysql
-      when: ansible_hostname == "pp-DBmaster"
-
     - name: Copy replica config file
       ansible.builtin.template:
         src: mysqld_replica.cnf.j2
         dest: /etc/mysql/mysql.conf.d/mysqld.cnf
       notify: Restart mysql
-      when: ansible_hostname == "pp-DBslave"
 
-    - name: Create main user
-      community.mysql.mysql_user:
-        login_password: '{{ mysql_root_password }}'
-        name: repl
-        host: '%'
-        password: '{{ mysql_replica_password }}'
-        priv: '*.*:REPLICATION SLAVE'
-        state: present
-#        column_case_sensitive: false
-      when: ansible_hostname == "pp-DBmaster"
+    - name: Copy backup mysql
+      ansible.builtin.shell: |
+        scp -o StrictHostKeyChecking=no -i /home/starsh/.ssh/id_ed25519 starsh@192.168.122.20:/tmp/fullbackup*.sql /tmp/fullbackup.sql
+      delegate_to: pp-DBslave
 
     - name: Restarted mysql.service in pp-DBslave. Why? I don't know!
       ansible.builtin.systemd:
-        name: mysql.servise
+        name: mysql.service
         state: restarted
+    
+    - name: Stot replica
+      community.mysql.mysql_replication:
+        login_password: '{{ mysql_root_password }}'
+        mode: stopreplica
+
+    # - name: Is's restore databases
+    #   ansible.builtin.shell: |
+    #     mysql -u root -p123 < /tmp/fullbackup.sql
+    #   become: true
+
+    - name: Reset GTID on slave before restore
+      ansible.builtin.shell: |
+        mysql -u root -p123 -e "STOP SLAVE; RESET SLAVE ALL; RESET MASTER;"
+      become: true
+
+    - name: Restore database after GTID reset
+      ansible.builtin.shell: |
+        mysql -u root -p123 < /tmp/fullbackup.sql
+      become: true
 
     - name: Configure replica
       community.mysql.mysql_replication:
@@ -71,31 +77,14 @@
         master_user: repl
         master_password: '{{ mysql_replica_password }}'
         master_auto_position: true
-      when: ansible_hostname == "pp-DBslave"
-      ignore_errors: true
+#      ignore_errors: true
 
     - name: Start replica
       community.mysql.mysql_replication:
         login_password: '{{ mysql_root_password }}'
         mode: startreplica
-      when: ansible_hostname == "pp-DBslave"
 
-    - name: Create a new database with name 'wordpress'
-      community.mysql.mysql_db:
-        name: wordpress
-        state: present
-        login_unix_socket: /run/mysqld/mysqld.sock
-      when: ansible_hostname == "pp-DBmaster"
-
-    - name: Create user Wordpress and grant privileges on wordpress
-      community.mysql.mysql_user:
-        login_password: '{{ mysql_root_password }}'
-        name: wordpress
-        host: '%'
-        password: wordpress
-        priv: 'wordpress.*:ALL,GRANT'
-      when: ansible_hostname == "pp-DBmaster"
-
+# Установка и конфигурирование filebeat
     - name: Install deb package filebeat
       ansible.builtin.apt:
         deb: "{{ filebeat_deb }}"
@@ -113,11 +102,4 @@
         name: filebeat
         enabled: true
         state: 'started'
-
-    # - name: Configure iptables rules from template
-    #   template:
-    #     src: iptables-rules.j2
-    #     dest: /etc/iptables/rules.v4
-    #     mode: 0644
-    #   notify: Apply iptables rules
 ...

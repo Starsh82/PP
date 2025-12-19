@@ -61,6 +61,14 @@
     #     name: systemd-networkd
     #     state: restarted
 
+    - name: Copy ssh key
+      ansible.builtin.copy:
+        src: /home/starsh/.ssh/id_ed25519
+        dest: /home/starsh/.ssh/
+        owner: starsh
+        group: starsh
+        mode: '0600'
+
     - name: Apply network configuration
       ansible.builtin.command: netplan apply  # Применяем новые сетевые настройки через netplan
       async: 10  # Запускаем команду асинхронно с максимальным временем выполнения 45 секунд

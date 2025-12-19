@@ -11,7 +11,7 @@
   handlers:
     - name: Restart mysql
       become: true
-      ansible.builtin.service:
+      ansible.builtin.systemd:
         name: mysql
         state: restarted
 
@@ -54,13 +54,19 @@
         password: '{{ mysql_replica_password }}'
         priv: '*.*:REPLICATION SLAVE'
         state: present
+#        column_case_sensitive: false
       when: ansible_hostname == "pp-DBmaster"
+
+    # - name: Restarted mysql.service in pp-DBslave. Why? I don't know!
+    #   ansible.builtin.systemd:
+    #     name: mysql
+    #     state: restarted
 
     - name: Configure replica
       community.mysql.mysql_replication:
         login_password: '{{ mysql_root_password }}'
         mode: changeprimary
-        master_host: "{{DBmaster}}"
+        master_host: "{{ DBmaster }}"
         master_port: 3306
         master_user: repl
         master_password: '{{ mysql_replica_password }}'

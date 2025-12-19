@@ -80,6 +80,21 @@ sudo apt install mysql-server-8.0
 
 select * from user where user='repl'\G
 
+Порядок восстановления REPLICA:
+
+1. Поднять mysql, можно даже поднять репликацию.
+1.1. Скопировать с фронта бэкапы, все в один файл, сохранится последний, ну я так надеюсь
+    scp -i /home/starsh/.ssh/id_ed25519 starsh@192.168.122.20:/tmp/fullbackup*.sql /tmp/fullbackup.sql
+2. Остановить репликацию
+    stop replica
+3. Восстновсление
+    mysql < /tmp/fullbackup.sql
+4. Выполнить магию настройку репликации с GTID
+    CHANGE REPLICATION SOURCE TO SOURCE_HOST='192.168.122.23', SOURCE_USER='repl', SOURCE_PASSWORD='123mysql', SOURCE_AUTO_POSITION = 1, GET_SOURCE_PUBLIC_KEY = 1;
+5. start replication
+
+
+
 Админка wordpress:
     92.168.122.20/wp-admin
     test 123

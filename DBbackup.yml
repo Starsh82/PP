@@ -42,31 +42,9 @@
 
     - name: Copy backups to pp-front
       ansible.builtin.shell: |
-        rsync -avz -e ssh /tmp/fullbackup_*.sql starsh@192.168.122.20:/tmp/
+        rsync -avz -e "ssh -i /home/starsh/.ssh/id_ed25519 -o StrictHostKeyChecking=no" /tmp/fullbackup_*.sql starsh@192.168.122.20:/tmp/
       delegate_to: "pp-DBslave"
       become: false
-
-    # - name: Copy backups to pp-front
-    #   ansible.builtin.synchronize:
-    #     src: "/tmp/fullbackup_*.sql"
-    #     dest: "/tmp/"
-    #     delegate_to: "pp-DBslave"
-    #   become: false
-
-    # - name: Copy backups to pp-front
-    #   ansible.builtin.copy:
-    #     src: "/tmp/fullbackup_*.sql"
-    #     dest: "/tmp/"
-    #     delegate_to: "starsh@192.168.122.20"
-
-    # - name: Copy backups to pp-front
-    #   ansible.builtin.shell: "scp /tmp/fullbackup_*.sql starsh@192.168.122.20:/tmp/"
-
-    # - name: Downloading backup to local computer
-    #   ansible.builtin.fetch:
-    #     src: "{{ db_file_name }}"
-    #     dest: "tmp/{{ db_file_name }}"
-    #     flat: true
 
     - name: Download completed
       debug:

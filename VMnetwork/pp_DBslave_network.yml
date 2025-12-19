@@ -43,7 +43,7 @@
         mode: 0644
 
     - name: Проверка имени хоста после перезагрузки
-      copy:
+      ansible.builtin.copy:
         content: "{{ new_hostname }}"
         dest: /etc/hostname
         owner: root
@@ -61,11 +61,18 @@
     #     name: systemd-networkd
     #     state: restarted
 
+    - name: Copy ssh key
+      ansible.builtin.copy:
+        src: /home/starsh/.ssh/id_ed25519
+        dest: /home/starsh/.ssh/
+        owner: starsh
+        group: starsh
+        mode: '0600'
+
     - name: Apply network configuration
       ansible.builtin.command: netplan apply  # Применяем новые сетевые настройки через netplan
       async: 10  # Запускаем команду асинхронно с максимальным временем выполнения 45 секунд
       poll: 0    # Не ждем завершения команды, сразу переходим к следующей задаче (ожидаем разрыв соединения)
-
     # - name: Wait for reconnection with reasonable timeout
     #   ansible.builtin.wait_for_connection:
     #     connect_timeout: 15  # Таймаут отдельной попытки подключения - 15 секунд

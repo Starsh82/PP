@@ -1,0 +1,147 @@
+---
+- name: Quick SSH keys setup for all hosts
+  hosts: all
+  vars:
+    ssh_user: "starsh"
+    ssh_password: "123"  # Пароль в явном виде
+    ssh_port: 22
+    
+  tasks:
+    # Устанавливаем связь с использованием пароля
+    - name: Test connection with password
+      ansible.builtin.ping:
+      become: false
+
+    # Шаг 1: Генерируем SSH ключ на каждом хосте
+    - name: Generate SSH key on each host
+      ansible.builtin.shell:
+        cmd: |
+          mkdir -p /home/{{ ssh_user }}/.ssh
+          chmod 700 /home/{{ ssh_user }}/.ssh
+          if [ ! -f /home/{{ ssh_user }}/.ssh/id_rsa ]; then
+            ssh-keygen -t rsa -b 4096 -f /home/{{ ssh_user }}/.ssh/id_rsa -N "" -q
+          fi
+          cat /home/{{ ssh_user }}/.ssh/id_rsa.pub
+        executable: /bin/bash
+        creates: /home/{{ ssh_user }}/.ssh/id_rsa
+      become_user: "{{ ssh_user }}"
+      register: ssh_key_output
+
+    - name: Extract public key
+      ansible.builtin.set_fact:
+        host_public_key: "{{ ssh_key_output.stdout_lines[-1] }}"
+        host_name: "{{ inventory_hostname }}"
+        host_ip: "{{ ansible_host }}"
+
+# Собираем все публичные ключи на управляющей машине
+- name: Collect all public keys
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Create list of all public keys
+      ansible.builtin.set_fact:
+        all_hosts_data: |
+          [
+          {% for host in groups['all'] %}
+            {
+              "name": "{{ hostvars[host].host_name }}",
+              "ip": "{{ hostvars[host].host_ip }}",
+              "public_key": "{{ hostvars[host].host_public_key }}"
+            }{% if not loop.last %},{% endif %}
+          {% endfor %}
+          ]
+
+    - name: Debug - show collected keys
+      ansible.builtin.debug:
+        var: all_hosts_data
+
+# Распределяем ключи на все хосты
+- name: Distribute SSH keys to all hosts
+  hosts: all
+  vars:
+    ssh_user: "starsh"
+    ssh_password: "123"
+    
+  tasks:
+    # Шаг 2: Добавляем все публичные ключи в authorized_keys
+    - name: Add all public keys to authorized_keys
+      ansible.builtin.authorized_key:
+        user: "{{ ssh_user }}"
+        key: "{{ item.public_key }}"
+        state: present
+        manage_dir: yes
+        exclusive: no  # Не удалять существующие ключи
+      loop: "{{ hostvars['localhost'].all_hosts_data }}"
+      loop_control:
+        label: "{{ item.name }}"
+      become_user: "{{ ssh_user }}"
+
+    # Шаг 3: Добавляем все хосты в known_hosts
+    - name: Add all hosts to known_hosts (без подтверждения)
+      ansible.builtin.shell:
+        cmd: |
+          > /home/{{ ssh_user }}/.ssh/known_hosts
+          {% for host in hostvars['localhost'].all_hosts_data %}
+          ssh-keyscan -H {{ host.ip }} >> /home/{{ ssh_user }}/.ssh/known_hosts 2>/dev/null
+          {% endfor %}
+        executable: /bin/bash
+      become_user: "{{ ssh_user }}"
+      changed_when: false
+
+    # Шаг 4: Настраиваем правильные права
+    - name: Set correct permissions
+      ansible.builtin.file:
+        path: "/home/{{ ssh_user }}/.ssh"
+        state: directory
+        mode: '0700'
+        owner: "{{ ssh_user }}"
+        group: "{{ ssh_user }}"
+
+    - name: Set permissions for authorized_keys
+      ansible.builtin.file:
+        path: "/home/{{ ssh_user }}/.ssh/authorized_keys"
+        mode: '0600'
+        owner: "{{ ssh_user }}"
+        group: "{{ ssh_user }}"
+
+    - name: Set permissions for known_hosts
+      ansible.builtin.file:
+        path: "/home/{{ ssh_user }}/.ssh/known_hosts"
+        mode: '0644'
+        owner: "{{ ssh_user }}"
+        group: "{{ ssh_user }}"
+
+# # Тестируем соединение между всеми хостами
+# - name: Test SSH connectivity between all hosts
+#   hosts: all
+#   vars:
+#     ssh_user: "starsh"
+    
+#   tasks:
+#     - name: Test passwordless SSH to all other hosts
+#       ansible.builtin.shell:
+#         cmd: |
+#           ssh -o BatchMode=yes \
+#               -o ConnectTimeout=5 \
+#               -o StrictHostKeyChecking=no \
+#               {{ ssh_user }}@{{ item.ip }} \
+#               "echo 'Success from {{ inventory_hostname }} to {{ item.name }}'"
+#         executable: /bin/bash
+#       loop: "{{ hostvars['localhost'].all_hosts_data }}"
+#       loop_control:
+#         label: "{{ item.name }}"
+#       when: item.name != inventory_hostname
+#       register: ssh_test_results
+#       failed_when: false
+#       changed_when: false
+#       become_user: "{{ ssh_user }}"
+
+#     - name: Show connectivity results
+#       ansible.builtin.debug:
+#         msg: |
+#           {{ inventory_hostname }} connectivity:
+#           {% for result in ssh_test_results.results %}
+#           {% if result.rc == 0 %}✓{% else %}✗{% endif %} {{ result.item.name }}
+#           {% endfor %}
+...
